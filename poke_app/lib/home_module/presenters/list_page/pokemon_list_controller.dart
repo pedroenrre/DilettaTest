@@ -19,7 +19,8 @@ class PokemonListController {
     if (listState.value is PokemonListLoadedState) {
       final currentState = listState.value as PokemonListLoadedState;
       initialCount = currentState.offset;
-      listState.value = PokemonListPartialState(currentState.pokemons);
+      listState.value =
+          PokemonListLoadedState(currentState.pokemons, loading: true);
     } else {
       initialCount = 1;
     }
@@ -27,28 +28,30 @@ class PokemonListController {
 
     stream.listen(
       (pokemon) {
-        if (listState.value is PokemonListPartialState) {
-          final currentState = listState.value as PokemonListPartialState;
-          listState.value = PokemonListPartialState(
+        if (listState.value is PokemonListLoadedState) {
+          final currentState = listState.value as PokemonListLoadedState;
+          listState.value = PokemonListLoadedState(
             [...currentState.pokemons, pokemon],
+            loading: true,
           );
         } else {
-          listState.value = PokemonListPartialState(
+          listState.value = PokemonListLoadedState(
             [pokemon],
+            loading: true,
           );
         }
       },
       onError: (error) {
-        if (listState.value is! PokemonListPartialState ||
-            listState.value is! PokemonListLoadedState) {
+        if (listState.value is! PokemonListLoadedState) {
           listState.value = PokemonListErrorState(
             'Erro ao carregar os pokémons.',
           );
         }
       },
       onDone: () {
-        final currentState = listState.value as PokemonListPartialState;
-        listState.value = PokemonListLoadedState(currentState.pokemons);
+        final currentState = listState.value as PokemonListLoadedState;
+        listState.value =
+            PokemonListLoadedState(currentState.pokemons, loading: false);
       },
     );
   }

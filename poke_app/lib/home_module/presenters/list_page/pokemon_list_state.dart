@@ -6,17 +6,13 @@ class PokemonListLoadingState extends PokemonListState {
   final int index = 1;
 }
 
-class PokemonListPartialState extends PokemonListState {
-  final List<PokemonListItemEntity> pokemons;
-
-  PokemonListPartialState(this.pokemons);
-}
-
 class PokemonListLoadedState extends PokemonListState {
   final List<PokemonListItemEntity> pokemons;
   final int offset;
+  final bool loading;
 
-  PokemonListLoadedState(this.pokemons) : offset = pokemons.length + 1;
+  PokemonListLoadedState(this.pokemons, {this.loading = false})
+      : offset = pokemons.length + 1;
 }
 
 class PokemonListErrorState extends PokemonListState {

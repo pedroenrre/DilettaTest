@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:poke_app/home_module/presenters/list_page/components/modal_loading.dart';
 import 'package:poke_app/home_module/presenters/list_page/components/pokemon_card.dart';
 import 'package:poke_app/home_module/presenters/list_page/pokemon_list_controller.dart';
 import 'package:poke_app/home_module/presenters/list_page/pokemon_list_state.dart';
@@ -42,7 +43,7 @@ class _PokeListPageState extends State<PokeListPage> {
               ],
             );
           }
-          if (state is PokemonListPartialState) {
+          if (state is PokemonListLoadedState) {
             return Stack(
               children: [
                 ListView.builder(
@@ -50,53 +51,40 @@ class _PokeListPageState extends State<PokeListPage> {
                   padding: const EdgeInsets.all(16),
                   itemBuilder: (context, index) {
                     final pokemon = state.pokemons[index];
+                    if (index == state.pokemons.length - 1) {
+                      return Column(
+                        children: [
+                          PokemonCard(
+                              pokemon: pokemon,
+                              onFavoritePressed: () {
+                                controller.toggleFavorite(
+                                    pokemon.id, pokemon.favorite);
+                              }),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: controller.fetchPokemons,
+                            child: const Text('Carregar mais'),
+                          ),
+                        ],
+                      );
+                    }
                     return PokemonCard(
                       pokemon: pokemon,
-                      onFavoritePressed: () {},
-                      favoriteDisabled: true,
+                      onFavoritePressed: () {
+                        controller.toggleFavorite(pokemon.id, pokemon.favorite);
+                      },
                     );
                   },
                 ),
-                ModalBarrier(
-                  color: Colors.black.withOpacity(0.5),
-                  dismissible: false,
-                ),
-                const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                ModalLoading(showModalLoading: state.loading),
+                // ModalBarrier(
+                //   color: Colors.black.withOpacity(0.5),
+                //   dismissible: false,
+                // ),
+                // const Center(
+                //   child: CircularProgressIndicator(),
+                // ),
               ],
-            );
-          }
-          if (state is PokemonListLoadedState) {
-            return ListView.builder(
-              itemCount: state.pokemons.length,
-              padding: const EdgeInsets.all(16),
-              itemBuilder: (context, index) {
-                final pokemon = state.pokemons[index];
-                if (index == state.pokemons.length - 1) {
-                  return Column(
-                    children: [
-                      PokemonCard(
-                          pokemon: pokemon,
-                          onFavoritePressed: () {
-                            controller.toggleFavorite(
-                                pokemon.id, pokemon.favorite);
-                          }),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: controller.fetchPokemons,
-                        child: const Text('Carregar mais'),
-                      ),
-                    ],
-                  );
-                }
-                return PokemonCard(
-                  pokemon: pokemon,
-                  onFavoritePressed: () {
-                    controller.toggleFavorite(pokemon.id, pokemon.favorite);
-                  },
-                );
-              },
             );
           }
           if (state is PokemonListErrorState) {
