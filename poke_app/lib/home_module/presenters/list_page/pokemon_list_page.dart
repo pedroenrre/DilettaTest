@@ -27,10 +27,10 @@ class _PokeListPageState extends State<PokeListPage> {
       appBar: AppBar(
         title: const Text('Poke App'),
       ),
-      body: ValueListenableBuilder(
-        valueListenable: controller.listState,
-        builder: (context, state, child) {
-          if (state is PokemonListLoadingState) {
+      body: AnimatedBuilder(
+        animation: controller,
+        builder: (context, widget) {
+          if (controller.listState is PokemonListLoadingState) {
             return Stack(
               children: [
                 ModalBarrier(
@@ -43,7 +43,8 @@ class _PokeListPageState extends State<PokeListPage> {
               ],
             );
           }
-          if (state is PokemonListLoadedState) {
+          if (controller.listState is PokemonListLoadedState) {
+            final state = controller.listState as PokemonListLoadedState;
             return Stack(
               children: [
                 ListView.builder(
@@ -87,7 +88,8 @@ class _PokeListPageState extends State<PokeListPage> {
               ],
             );
           }
-          if (state is PokemonListErrorState) {
+          if (controller.listState is PokemonListErrorState) {
+            final state = controller.listState as PokemonListErrorState;
             return Center(
               child: Text(state.message),
             );

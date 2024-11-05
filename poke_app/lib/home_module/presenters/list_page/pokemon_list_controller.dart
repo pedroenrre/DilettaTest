@@ -3,9 +3,8 @@ import 'package:poke_app/home_module/domain/usercases/get_pokemons_usercase.dart
 import 'package:poke_app/home_module/domain/usercases/set_favorites_usercase.dart';
 import 'package:poke_app/home_module/presenters/list_page/pokemon_list_state.dart';
 
-class PokemonListController {
-  final ValueNotifier<PokemonListState> listState =
-      ValueNotifier(PokemonListLoadingState());
+class PokemonListController extends ChangeNotifier {
+  PokemonListState listState = PokemonListLoadingState();
   final IGetPokemonsUsecase getInitialPokemonsUsecase;
   final ISetFavoritesUsercase setFavoritesUsercase;
 
@@ -16,11 +15,11 @@ class PokemonListController {
 
   Future<void> fetchPokemons() async {
     int initialCount;
-    if (listState.value is PokemonListLoadedState) {
-      final currentState = listState.value as PokemonListLoadedState;
+    if (listState is PokemonListLoadedState) {
+      final currentState = listState as PokemonListLoadedState;
       initialCount = currentState.offset;
-      listState.value =
-          PokemonListLoadedState(currentState.pokemons, loading: true);
+      listState = PokemonListLoadedState(currentState.pokemons, loading: true);
+      notifyListeners();
     } else {
       initialCount = 1;
     }
@@ -28,49 +27,53 @@ class PokemonListController {
 
     stream.listen(
       (pokemon) {
-        if (listState.value is PokemonListLoadedState) {
-          final currentState = listState.value as PokemonListLoadedState;
-          listState.value = PokemonListLoadedState(
+        if (listState is PokemonListLoadedState) {
+          final currentState = listState as PokemonListLoadedState;
+          listState = PokemonListLoadedState(
             [...currentState.pokemons, pokemon],
             loading: true,
           );
         } else {
-          listState.value = PokemonListLoadedState(
+          listState = PokemonListLoadedState(
             [pokemon],
             loading: true,
           );
         }
+        notifyListeners();
       },
       onError: (error) {
-        if (listState.value is! PokemonListLoadedState) {
-          listState.value = PokemonListErrorState(
+        if (listState is! PokemonListLoadedState) {
+          listState = PokemonListErrorState(
             'Erro ao carregar os pokémons.',
           );
         }
+        notifyListeners();
       },
       onDone: () {
-        final currentState = listState.value as PokemonListLoadedState;
-        listState.value =
+        final currentState = listState as PokemonListLoadedState;
+        listState =
             PokemonListLoadedState(currentState.pokemons, loading: false);
+        notifyListeners();
       },
     );
   }
 
   Future<void> toggleFavorite(num pokemonId, bool isCurrentlyFavorite) async {
-    if (listState.value is PokemonListLoadedState) {
+    if (listState is PokemonListLoadedState) {
       await setFavoritesUsercase(pokemonId, isCurrentlyFavorite);
 
-      listState.value = PokemonListLoadedState(
-          (listState.value as PokemonListLoadedState).pokemons.map((pokemon) {
+      listState = PokemonListLoadedState(
+          (listState as PokemonListLoadedState).pokemons.map((pokemon) {
         if (pokemon.id == pokemonId) {
           return pokemon.copyWith(isFavorite: !isCurrentlyFavorite);
         }
         return pokemon;
       }).toList());
+      notifyListeners();
     }
   }
 
   void dispose() {
-    listState.dispose();
+    // listState.dispose();
   }
 }
