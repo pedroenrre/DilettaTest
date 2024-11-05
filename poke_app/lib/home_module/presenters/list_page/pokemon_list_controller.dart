@@ -1,19 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:poke_app/home_module/domain/entities/pokemon_list_item_entity.dart';
+import 'package:poke_app/home_module/domain/usercases/get_favorites_usercase.dart';
 import 'package:poke_app/home_module/domain/usercases/get_pokemons_usercase.dart';
 import 'package:poke_app/home_module/domain/usercases/set_favorites_usercase.dart';
 import 'package:poke_app/home_module/presenters/list_page/pokemon_list_state.dart';
+import 'package:poke_app/shared_module/stores/favorites_store.dart';
 
 class PokemonListController extends ChangeNotifier {
   PokemonListState listState = PokemonListLoadingState();
+  final FavoritesStore favoritesStore;
   final IGetPokemonsUsecase getInitialPokemonsUsecase;
   final ISetFavoritesUsercase setFavoritesUsercase;
+  final IGetFavoritesUsercase getFavoritesUsercase;
 
   PokemonListController({
+    required this.favoritesStore,
     required this.getInitialPokemonsUsecase,
     required this.setFavoritesUsercase,
-  });
+    required this.getFavoritesUsercase,
+  }) {
+    favoritesStore.addListener(_onGlobalStoreChanged);
+  }
+
+  void _onGlobalStoreChanged() {
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    favoritesStore.removeListener(_onGlobalStoreChanged);
+    super.dispose();
+  }
 
   Future<void> fetchPokemons() async {
+    final currentFavorites = await getFavoritesUsercase();
+    favoritesStore.setFavorites(currentFavorites);
     int initialCount;
     if (listState is PokemonListLoadedState) {
       final currentState = listState as PokemonListLoadedState;
@@ -58,22 +79,20 @@ class PokemonListController extends ChangeNotifier {
     );
   }
 
-  Future<void> toggleFavorite(num pokemonId, bool isCurrentlyFavorite) async {
+  Future<void> toggleFavorite(
+      PokemonListItemEntity pokemonEntity, bool isCurrentlyFavorite) async {
     if (listState is PokemonListLoadedState) {
-      await setFavoritesUsercase(pokemonId, isCurrentlyFavorite);
+      final currentFavorites =
+          await setFavoritesUsercase(pokemonEntity, isCurrentlyFavorite);
 
       listState = PokemonListLoadedState(
           (listState as PokemonListLoadedState).pokemons.map((pokemon) {
-        if (pokemon.id == pokemonId) {
+        if (pokemon.id == pokemonEntity.id) {
           return pokemon.copyWith(isFavorite: !isCurrentlyFavorite);
         }
         return pokemon;
       }).toList());
-      notifyListeners();
+      favoritesStore.setFavorites(currentFavorites);
     }
-  }
-
-  void dispose() {
-    // listState.dispose();
   }
 }

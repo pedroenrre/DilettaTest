@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:poke_app/home_module/data/datasources/local/local_datasource.dart';
 import 'package:poke_app/home_module/data/datasources/remote/remote_datasource.dart';
 import 'package:poke_app/home_module/data/models/pokemon_model.dart';
@@ -14,22 +16,30 @@ class PokemonRespository implements IPokemonRepository {
   @override
   Stream<PokemonListItemEntity> getPokemons(
       int initialCount, int maxCount) async* {
-    List<String> favoriteIds = await localDataSource.getFavoritePokemons();
-
     await for (final PokemonModel pokemon
         in dataSource.getPokemonsDetails(initialCount, maxCount)) {
-      final isFavorite = favoriteIds.contains(pokemon.id.toString());
-      yield pokemon.toEntity(isFavorite: isFavorite);
+      yield pokemon.toEntity();
     }
   }
 
   @override
-  Future<List<String>> getFavorites() {
-    return localDataSource.getFavoritePokemons();
+  Future<List<PokemonListItemEntity>> getFavorites() async {
+    List<String> favoritesStringList =
+        await localDataSource.getFavoritePokemons();
+    List<PokemonListItemEntity> favoritePokemons = favoritesStringList
+        .map(
+          (item) =>
+              PokemonModel.fromJson(jsonDecode(item) as Map<String, dynamic>)
+                  .toEntity(),
+        )
+        .toList();
+    return favoritePokemons;
   }
 
   @override
-  Future<bool> setFavorites(List<String> favorites) {
-    return localDataSource.saveFavoritePokemons(favorites);
+  Future<bool> setFavorites(List<PokemonListItemEntity> favorites) {
+    final List<PokemonModel> pokemonModelList =
+        favorites.map((item) => PokemonModel.fromEntity(item)).toList();
+    return localDataSource.saveFavoritePokemons(pokemonModelList);
   }
 }

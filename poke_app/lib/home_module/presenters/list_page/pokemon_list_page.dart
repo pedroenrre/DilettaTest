@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:poke_app/home_module/presenters/list_page/components/modal_loading.dart';
-import 'package:poke_app/home_module/presenters/list_page/components/pokemon_card.dart';
+import 'package:poke_app/home_module/presenters/components/favorites_badge.dart';
+import 'package:poke_app/home_module/presenters/components/modal_loading.dart';
+import 'package:poke_app/home_module/presenters/components/pokemon_card.dart';
 import 'package:poke_app/home_module/presenters/list_page/pokemon_list_controller.dart';
 import 'package:poke_app/home_module/presenters/list_page/pokemon_list_state.dart';
 
@@ -21,11 +22,26 @@ class _PokeListPageState extends State<PokeListPage> {
     controller.fetchPokemons();
   }
 
+  onFavoritePressed() {
+    Modular.to.pushNamed('/favorites');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Poke App'),
+        actions: [
+          AnimatedBuilder(
+            animation: controller,
+            builder: (context, widget) {
+              return FavoritesBadge(
+                count: controller.favoritesStore.favorites.length,
+                onFavoritePressed: onFavoritePressed,
+              );
+            },
+          )
+        ],
       ),
       body: AnimatedBuilder(
         animation: controller,
@@ -56,11 +72,16 @@ class _PokeListPageState extends State<PokeListPage> {
                       return Column(
                         children: [
                           PokemonCard(
-                              pokemon: pokemon,
-                              onFavoritePressed: () {
-                                controller.toggleFavorite(
-                                    pokemon.id, pokemon.favorite);
-                              }),
+                            pokemon: pokemon,
+                            isFavorite:
+                                controller.favoritesStore.isFavorite(pokemon),
+                            onFavoritePressed: () {
+                              controller.toggleFavorite(
+                                pokemon,
+                                controller.favoritesStore.isFavorite(pokemon),
+                              );
+                            },
+                          ),
                           const SizedBox(height: 8),
                           ElevatedButton(
                             onPressed: controller.fetchPokemons,
@@ -71,20 +92,17 @@ class _PokeListPageState extends State<PokeListPage> {
                     }
                     return PokemonCard(
                       pokemon: pokemon,
+                      isFavorite: controller.favoritesStore.isFavorite(pokemon),
                       onFavoritePressed: () {
-                        controller.toggleFavorite(pokemon.id, pokemon.favorite);
+                        controller.toggleFavorite(
+                          pokemon,
+                          controller.favoritesStore.isFavorite(pokemon),
+                        );
                       },
                     );
                   },
                 ),
                 ModalLoading(showModalLoading: state.loading),
-                // ModalBarrier(
-                //   color: Colors.black.withOpacity(0.5),
-                //   dismissible: false,
-                // ),
-                // const Center(
-                //   child: CircularProgressIndicator(),
-                // ),
               ],
             );
           }

@@ -3,13 +3,11 @@ class PokemonListItemEntity {
   String name;
   String url;
   List<String> types;
-  bool favorite;
   PokemonListItemEntity({
     required this.name,
     required this.url,
     required this.id,
     required this.types,
-    this.favorite = false,
   });
 
   PokemonListItemEntity copyWith({
@@ -20,7 +18,6 @@ class PokemonListItemEntity {
       name: name,
       url: url,
       types: types,
-      favorite: isFavorite ?? favorite,
     );
   }
 }

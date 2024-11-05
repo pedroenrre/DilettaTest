@@ -14,24 +14,42 @@ class PokemonModel {
   });
 
   factory PokemonModel.fromJson(Map<String, dynamic> json) {
-    List<String> types = (json['types'] as List)
-        .map((typeInfo) => typeInfo['type']['name'] as String)
+    List<String> types = (json['types'] as List<dynamic>)
+        .map((typeInfo) =>
+            typeInfo is String ? typeInfo : typeInfo['type']['name'] as String)
         .toList();
     return PokemonModel(
       name: json['name'] as String,
-      url: json['sprites']['front_default'] as String,
+      url: json['url'] as String? ?? json['sprites']['front_default'] as String,
       id: json['id'] as num,
       types: types,
     );
   }
 
-  PokemonListItemEntity toEntity({bool? isFavorite}) {
+  PokemonListItemEntity toEntity() {
     return PokemonListItemEntity(
       id: id,
       name: name,
       url: url,
       types: types,
-      favorite: isFavorite ?? false,
     );
+  }
+
+  factory PokemonModel.fromEntity(PokemonListItemEntity entity) {
+    return PokemonModel(
+      name: entity.name,
+      url: entity.url,
+      id: entity.id,
+      types: entity.types,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'id': id,
+      'name': name,
+      'url': url,
+      'types': types,
+    };
   }
 }

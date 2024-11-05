@@ -1,3 +1,4 @@
+import 'package:poke_app/home_module/domain/entities/pokemon_list_item_entity.dart';
 import 'package:poke_app/home_module/domain/repositories/pokemon_repository.dart';
 import 'package:poke_app/home_module/domain/usercases/set_favorites_usercase.dart';
 
@@ -7,17 +8,22 @@ class SetFavoritesUsercase implements ISetFavoritesUsercase {
     required this.repository,
   });
   @override
-  Future<bool> call(num pokemonId, bool isCurrentlyFavorite) async {
+  Future<List<PokemonListItemEntity>> call(
+      PokemonListItemEntity pokemonEntity, bool isCurrentlyFavorite) async {
     final newFavoriteState = !isCurrentlyFavorite;
 
-    final currentFavorites = await repository.getFavorites();
+    List<PokemonListItemEntity> currentFavorites =
+        await repository.getFavorites();
 
     if (newFavoriteState) {
-      currentFavorites.add(pokemonId.toString());
+      currentFavorites.add(pokemonEntity);
     } else {
-      currentFavorites.remove(pokemonId.toString());
+      currentFavorites
+          .removeWhere((favorite) => favorite.id == pokemonEntity.id);
     }
+    currentFavorites.sort((a, b) => a.id.compareTo(b.id));
+    await repository.setFavorites(currentFavorites);
 
-    return repository.setFavorites(currentFavorites);
+    return currentFavorites;
   }
 }

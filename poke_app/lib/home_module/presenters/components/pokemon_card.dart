@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:poke_app/core/constants/app_colors.dart';
 import 'package:poke_app/core/extentions/text_extention.dart';
 import 'package:poke_app/home_module/domain/entities/pokemon_list_item_entity.dart';
-import 'package:poke_app/home_module/presenters/list_page/components/type_tag.dart';
+import 'package:poke_app/home_module/presenters/components/type_tag.dart';
 
 class PokemonCard extends StatelessWidget {
   final PokemonListItemEntity pokemon;
   final Function() onFavoritePressed;
+  final bool isFavorite;
   final bool favoriteDisabled;
   const PokemonCard({
     super.key,
     required this.pokemon,
     required this.onFavoritePressed,
+    required this.isFavorite,
     this.favoriteDisabled = false,
   });
 
@@ -68,8 +70,8 @@ class PokemonCard extends StatelessWidget {
             ),
             IconButton(
               icon: Icon(
-                pokemon.favorite ? Icons.favorite : Icons.favorite_border,
-                color: pokemon.favorite ? AppColors.favorite : Colors.grey,
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: isFavorite ? AppColors.favorite : Colors.grey,
               ),
               onPressed: favoriteDisabled ? null : onFavoritePressed,
             ),
